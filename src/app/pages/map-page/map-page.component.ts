@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, NgZone, OnInit, ViewEncapsulation } from '@angular/core';
 import { User } from 'firebase';
 import {} from 'googlemaps';
 import { Observable } from 'rxjs';
@@ -36,7 +36,9 @@ export class MapPageComponent implements OnInit {
   ds: google.maps.DirectionsService;
   dr: google.maps.DirectionsRenderer;
 
-  constructor(private loginService: LoginService) {}
+  constructor(
+    private loginService: LoginService,
+    private ngZone: NgZone) {}
 
   ngOnInit() {
 
@@ -67,7 +69,9 @@ export class MapPageComponent implements OnInit {
       });
 
       this.map.addListener('tilesloaded', () => {
-        this.mapLoaded = true;
+        this.ngZone.run(() => {
+          this.mapLoaded = true;
+        });
       });
 
       // adding a marker
@@ -120,8 +124,9 @@ export class MapPageComponent implements OnInit {
       if (status == google.maps.DirectionsStatus.OK) {
         this.dr.setDirections(response);
 
-        this.distance = response.routes[0].legs[0].distance.text;
-        this.time = response.routes[0].legs[0].duration.text;
+        let distanceInfo = response.routes[0].legs[0];
+        this.distance = distanceInfo.distance.text;
+        this.time = distanceInfo.duration.text;
       }
     })
   }
